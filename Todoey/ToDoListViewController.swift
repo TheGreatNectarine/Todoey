@@ -18,11 +18,16 @@ class ToDoItemCell: UITableViewCell {
 
 class ToDoListViewController: UITableViewController {
 
-	let todoItems = ["1", "2", "3"]
+	var todoItems = ["1", "2", "3"]
+	let defaults = UserDefaults.standard
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		self.tableView.register(ToDoItemCell.self, forCellReuseIdentifier: "ToDoItemCell")
+
+		if let items = defaults.array(forKey: "TodoList") as? [String] {
+			todoItems = items
+		}
 		// Do any additional setup after loading the view, typically from a nib.
 	}
 
@@ -47,5 +52,29 @@ class ToDoListViewController: UITableViewController {
 			tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
 		}
 		tableView.deselectRow(at: indexPath, animated: true)
+	}
+
+	//MARK: - IBActions
+
+	@IBAction func addNewItemButtonPressed(_ sender: UIBarButtonItem) {
+		var textField = UITextField()
+		let alert = UIAlertController(title: "Add New Todoey", message: "", preferredStyle: .alert)
+		let action = UIAlertAction(title: "Add Todoey", style: .default) { (action) in
+			//TODO: add empty string validation
+			//FIXME: HELLO FIX
+			//!!!: HE
+			//???: adasd
+			let toAdd = textField.text!
+			self.todoItems.append(toAdd)
+			self.defaults.set(self.todoItems, forKey: "TodoList")
+			//TODO: add animation
+			self.tableView.reloadData()
+		}
+		alert.addTextField { (alertTextField) in
+			alertTextField.placeholder = "Type here"
+			textField = alertTextField
+		}
+		alert.addAction(action)
+		present(alert, animated: true, completion: nil)
 	}
 }
