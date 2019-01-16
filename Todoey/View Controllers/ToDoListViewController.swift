@@ -7,11 +7,24 @@
 //
 
 import UIKit
+import CoreData
 
-class ToDoItemCell: UITableViewCell {
-	var item: Item? {
-		didSet {
-			self.textLabel?.text = item?.title
+//MARK: - Search Bar Delegate methods
+
+extension ToDoListViewController: UISearchBarDelegate {
+	func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+		let request: NSFetchRequest<Item> = Item.fetchRequest()
+		request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+		request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+		loadItems(with: request)
+	}
+
+	func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+		if searchText.count == 0 {
+			loadItems()
+			DispatchQueue.main.async {
+				searchBar.resignFirstResponder()
+			}
 		}
 	}
 }
@@ -19,18 +32,12 @@ class ToDoItemCell: UITableViewCell {
 class ToDoListViewController: UITableViewController {
 
 	var todoItems = [Item]()
-	let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+	let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
-
 		self.tableView.register(ToDoItemCell.self, forCellReuseIdentifier: "ToDoItemCell")
 		self.tableView.tableFooterView = UIView(frame: .zero)
-
-		todoItems.append(Item(title: "1", done: false))
-		todoItems.append(Item(title: "2", done: false))
-		todoItems.append(Item(title: "3", done: false))
-
 		loadItems()
 	}
 
@@ -62,6 +69,7 @@ class ToDoListViewController: UITableViewController {
 
 	override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
 		if editingStyle == .delete {
+			context.delete(todoItems[indexPath.row])
 			todoItems.remove(at: indexPath.row)
 			saveItems()
 			tableView.beginUpdates()
@@ -95,7 +103,10 @@ class ToDoListViewController: UITableViewController {
 	func addNewItemActionHandler(for textField: UITextField) {
 		let toAdd = textField.text!.trimmingCharacters(in: .whitespacesAndNewlines)
 		if toAdd.count > 0 {
-			self.todoItems.append(Item(title: toAdd, done: false))
+			let item = Item(context: context)
+			item.title = toAdd
+			item.done = false
+			self.todoItems.append(item)
 			saveItems()
 			let indexPath = IndexPath(row: self.todoItems.count - 1, section: 0)
 			self.tableView.beginUpdates()
@@ -103,24 +114,23 @@ class ToDoListViewController: UITableViewController {
 			self.tableView.endUpdates()
 		}
 	}
-	//MARK: Model Manipulation Methods
+
+	//MARK: - Model Manipulation Methods
+
 	func saveItems() {
 		do {
-			let encoder = PropertyListEncoder()
-			let data = try encoder.encode(todoItems)
-			try data.write(to: dataFilePath!)
+			try context.save()
 		} catch {
-			print("Error saving items: \(error)")
+			print("Error saving context: \(error)")
 		}
 	}
 
-	func loadItems() {
+	func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
 		do {
-			let decoder = PropertyListDecoder()
-			let data = try Data(contentsOf: dataFilePath!)
-			todoItems = try decoder.decode([Item].self, from: data)
+			todoItems = try context.fetch(request)
 		} catch {
-			print("Error loading items: \(error)")
+			print("Error fetching data from context: \(error)")
 		}
+		tableView.reloadData()
 	}
 }
