@@ -9,7 +9,7 @@
 import Foundation
 import UIKit
 
-public class ToDoItemCell: UITableViewCell {
+class ToDoItemCell: UITableViewCell {
 	var item: Item? {
 		didSet {
 			self.textLabel?.text = item?.title

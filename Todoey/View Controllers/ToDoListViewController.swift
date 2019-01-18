@@ -33,13 +33,21 @@ class ToDoListViewController: UITableViewController {
 
 	var todoItems = [Item]()
 	let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+	var selectedCategory: Category? {
+		didSet {
+			loadItems()
+		}
+	}
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		self.tableView.register(ToDoItemCell.self, forCellReuseIdentifier: "ToDoItemCell")
 		self.tableView.tableFooterView = UIView(frame: .zero)
-		loadItems()
+		if let searchBar = tableView.subviews.first(where: {$0.isKind(of: UISearchBar.self)}) {
+			self.tableView.contentOffset = CGPoint(x: 0, y: searchBar.frame.size.height)
+		}
 	}
+
 
 	//MARK: - TableView Datasource methods
 
@@ -103,9 +111,11 @@ class ToDoListViewController: UITableViewController {
 	func addNewItemActionHandler(for textField: UITextField) {
 		let toAdd = textField.text!.trimmingCharacters(in: .whitespacesAndNewlines)
 		if toAdd.count > 0 {
+			//FIXME: add Item class with init
 			let item = Item(context: context)
 			item.title = toAdd
 			item.done = false
+			item.parentCategory = selectedCategory
 			self.todoItems.append(item)
 			saveItems()
 			let indexPath = IndexPath(row: self.todoItems.count - 1, section: 0)
@@ -115,7 +125,7 @@ class ToDoListViewController: UITableViewController {
 		}
 	}
 
-	//MARK: - Model Manipulation Methods
+	//MARK: - Data Manipulation Methods
 
 	func saveItems() {
 		do {
@@ -125,7 +135,14 @@ class ToDoListViewController: UITableViewController {
 		}
 	}
 
-	func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
+	func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), matching predicate: NSPredicate? = nil) {
+		let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+		if let predicate = predicate {
+			let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [predicate, categoryPredicate])
+			request.predicate = compoundPredicate
+		} else {
+			request.predicate = categoryPredicate
+		}
 		do {
 			todoItems = try context.fetch(request)
 		} catch {
