@@ -7,16 +7,15 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 //MARK: - Search Bar Delegate methods
 
 extension CategoryViewController: UISearchBarDelegate {
 	func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-		let request: NSFetchRequest<Category> = Category.fetchRequest()
-		request.predicate = NSPredicate(format: "name CONTAINS[cd] %@", searchBar.text!)
-		request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
-		loadCategories(with: request)
+		categories = categories?.filter("name CONTAINS[cd] %@", searchBar.text!)
+		.sorted(byKeyPath: "name", ascending: true)
+		tableView.reloadData()
 	}
 
 	func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
@@ -30,18 +29,17 @@ extension CategoryViewController: UISearchBarDelegate {
 }
 
 class CategoryViewController: UITableViewController {
-
-	var categories = [Category]()
-	let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+	let realm = try! Realm()
+	var categories: Results<Category>?
 
     override func viewDidLoad() {
         super.viewDidLoad()
 		self.tableView.register(CategoryCell.self, forCellReuseIdentifier: "CategoryCell")
 		self.tableView.tableFooterView = UIView(frame: .zero)
-		loadCategories()
 		if let searchBar = tableView.subviews.first(where: {$0.isKind(of: UISearchBar.self)}) {
 			self.tableView.contentOffset = CGPoint(x: 0, y: searchBar.frame.size.height)
 		}
+		loadCategories()
     }
 
 	//MARK: - IBActions
@@ -70,11 +68,10 @@ class CategoryViewController: UITableViewController {
 		let categoryRaw = textField.text!.trimmingCharacters(in: .whitespacesAndNewlines)
 		if categoryRaw.count > 0 {
 			//FIXME: add Category class with init
-			let category = Category(context: context)
+			let category = Category()
 			category.name = categoryRaw
-			self.categories.append(category)
-			saveCategories()
-			let indexPath = IndexPath(row: self.categories.count - 1, section: 0)
+			save(category: category)
+			let indexPath = IndexPath(row: (self.categories?.count ?? 1) - 1, section: 0)
 			self.tableView.beginUpdates()
 			self.tableView.insertRows(at: [indexPath], with: .automatic)
 			self.tableView.endUpdates()
@@ -85,13 +82,16 @@ class CategoryViewController: UITableViewController {
 
 	override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath) as! CategoryCell
-		let category = categories[indexPath.row]
-		cell.category = category
+		if let category = categories?[indexPath.row] {
+			cell.category = category
+		} else {
+			cell.textLabel?.text = "No Categories Added"
+		}
 		return cell
 	}
 
 	override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-		return categories.count
+		return categories?.count ?? 1
 	}
 
 	//MARK: - TableView Delegate methods
@@ -104,8 +104,8 @@ class CategoryViewController: UITableViewController {
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 		let destination = segue.destination as! ToDoListViewController
 		if let indexPath = tableView.indexPathForSelectedRow {
-			destination.selectedCategory = categories[indexPath.row]
-			destination.navigationItem.title = categories[indexPath.row].name
+			destination.selectedCategory = categories?[indexPath.row]
+			destination.navigationItem.title = categories?[indexPath.row].name
 		}
 	}
 
@@ -115,9 +115,11 @@ class CategoryViewController: UITableViewController {
 
 	override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
 		if editingStyle == .delete {
-			context.delete(categories[indexPath.row])
-			categories.remove(at: indexPath.row)
-			saveCategories()
+			if let toDelete = categories?[indexPath.row] {
+				try! realm.write {
+					realm.delete(toDelete)
+				}
+			}
 			tableView.beginUpdates()
 			tableView.deleteRows(at: [indexPath], with: .automatic)
 			tableView.endUpdates()
@@ -126,20 +128,18 @@ class CategoryViewController: UITableViewController {
 
 	//MARK: - Data manipulation methods
 
-	func saveCategories() {
+	func save(category: Category) {
 		do {
-			try context.save()
+			try realm.write {
+				realm.add(category)
+			}
 		} catch {
 			print("Error saving context: \(error)")
 		}
 	}
 
-	func loadCategories(with request: NSFetchRequest<Category> = Category.fetchRequest()) {
-		do {
-			categories = try context.fetch(request)
-		} catch {
-			print("Error fetching data from context: \(error)")
-		}
+	func loadCategories() {
+		categories = realm.objects(Category.self)
 		tableView.reloadData()
 	}
 }
