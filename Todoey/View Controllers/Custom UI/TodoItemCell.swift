@@ -9,10 +9,10 @@
 import Foundation
 import UIKit
 
-class ToDoItemCell: UITableViewCell {
-	var item: Item? {
-		didSet {
-			self.textLabel?.text = item?.title
-		}
+extension UITableViewCell {
+	func setLabelText(from item: Item) {
+		textLabel?.text = item.title
 	}
 }
+
+

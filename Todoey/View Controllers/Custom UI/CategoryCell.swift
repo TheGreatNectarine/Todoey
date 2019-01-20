@@ -9,10 +9,9 @@
 import Foundation
 import UIKit
 
-class CategoryCell: UITableViewCell {
-	var category: Category? {
-		didSet {
-			self.textLabel?.text = category?.name
-		}
+extension UITableViewCell {
+	func setLabelText(from category: Category) {
+		textLabel?.text = category.name
 	}
 }
+

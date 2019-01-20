@@ -9,35 +9,17 @@
 import UIKit
 import RealmSwift
 
-//MARK: - Search Bar Delegate methods
-
-extension CategoryViewController: UISearchBarDelegate {
-	func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-		categories = categories?.filter("name CONTAINS[cd] %@", searchBar.text!)
-		.sorted(byKeyPath: "name", ascending: true)
-		tableView.reloadData()
-	}
-
-	func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-		if searchText.count == 0 {
-			loadCategories()
-			DispatchQueue.main.async {
-				searchBar.resignFirstResponder()
-			}
-		}
-	}
-}
-
-class CategoryViewController: UITableViewController {
+class CategoryViewController: SwipeTableViewController {
 	let realm = try! Realm()
 	var categories: Results<Category>?
 
     override func viewDidLoad() {
         super.viewDidLoad()
-		self.tableView.register(CategoryCell.self, forCellReuseIdentifier: "CategoryCell")
-		self.tableView.tableFooterView = UIView(frame: .zero)
+//		self.tableView.register(CategoryCell.self, forCellReuseIdentifier: "CategoryCell")
+		tableView.tableFooterView = UIView(frame: .zero)
+		tableView.rowHeight = 80.0
 		if let searchBar = tableView.subviews.first(where: {$0.isKind(of: UISearchBar.self)}) {
-			self.tableView.contentOffset = CGPoint(x: 0, y: searchBar.frame.size.height)
+			tableView.contentOffset = CGPoint(x: 0, y: searchBar.frame.size.height)
 		}
 		loadCategories()
     }
@@ -81,9 +63,9 @@ class CategoryViewController: UITableViewController {
 	//MARK: - TableView Data Source methods
 
 	override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-		let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath) as! CategoryCell
+		let cell = super.tableView(tableView, cellForRowAt: indexPath)
 		if let category = categories?[indexPath.row] {
-			cell.category = category
+			cell.setLabelText(from: category)
 		} else {
 			cell.textLabel?.text = "No Categories Added"
 		}
@@ -113,19 +95,6 @@ class CategoryViewController: UITableViewController {
 		return true
 	}
 
-	override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-		if editingStyle == .delete {
-			if let toDelete = categories?[indexPath.row] {
-				try! realm.write {
-					realm.delete(toDelete)
-				}
-			}
-			tableView.beginUpdates()
-			tableView.deleteRows(at: [indexPath], with: .automatic)
-			tableView.endUpdates()
-		}
-	}
-
 	//MARK: - Data manipulation methods
 
 	func save(category: Category) {
@@ -142,4 +111,36 @@ class CategoryViewController: UITableViewController {
 		categories = realm.objects(Category.self)
 		tableView.reloadData()
 	}
+
+	override func updateModel(at indexPath: IndexPath) {
+		guard let toDelete = self.categories?[indexPath.row] else {
+			return
+		}
+		try! self.realm.write {
+			self.realm.delete(toDelete)
+		}
+		tableView.beginUpdates()
+		tableView.deleteRows(at: [indexPath], with: .automatic)
+		tableView.endUpdates()
+	}
 }
+
+//MARK: - Search Bar Delegate methods
+
+extension CategoryViewController: UISearchBarDelegate {
+	func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+		categories = categories?.filter("name CONTAINS[cd] %@", searchBar.text!)
+			.sorted(byKeyPath: "name", ascending: true)
+		tableView.reloadData()
+	}
+
+	func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+		if searchText.count == 0 {
+			loadCategories()
+			DispatchQueue.main.async {
+				searchBar.resignFirstResponder()
+			}
+		}
+	}
+}
+

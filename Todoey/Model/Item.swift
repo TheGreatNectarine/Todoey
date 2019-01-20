@@ -15,6 +15,7 @@ class Item: Object {
 	@objc dynamic var dateCreated: Date?
 	var parentCategory = LinkingObjects(fromType: Category.self, property: "items")
 
+	//FIXME: - Implement initializers
 	/*init(title: String, done: Bool) {
 		super.init()
 		self.title = title
