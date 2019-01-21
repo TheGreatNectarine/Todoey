@@ -18,16 +18,44 @@ class ToDoListViewController: SwipeTableViewController {
 			loadItems()
 		}
 	}
+	
+	@IBOutlet weak var searchBar: UISearchBar!
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
-//		self.tableView.register(ToDoItemCell.self, forCellReuseIdentifier: "ToDoItemCell")
-		self.tableView.tableFooterView = UIView(frame: .zero)
-		if let searchBar = tableView.subviews.first(where: {$0.isKind(of: UISearchBar.self)}) {
-			self.tableView.contentOffset = CGPoint(x: 0, y: searchBar.frame.size.height)
-		}
+		tableView.tableFooterView = UIView(frame: .zero)
+		tableView.rowHeight = 80.0
 	}
 
+	override func viewWillAppear(_ animated: Bool) {
+		super.viewWillAppear(animated)
+		tableView.contentOffset = CGPoint(x: 0, y: searchBar.frame.size.height)
+		guard let color = selectedCategory?.cellColor else {
+			fatalError("no color")
+		}
+		updateNavBarAndSearchBar(withHexCode: color)
+
+	}
+
+	override func viewWillDisappear(_ animated: Bool) {
+		super.viewWillDisappear(animated)
+		updateNavBarAndSearchBar(withHexCode: "ID9BF6")
+	}
+
+	//MARK: - NavBar Setup Methods
+
+	func updateNavBarAndSearchBar(withHexCode hexCode: String) {
+		guard let navBar = navigationController?.navigationBar else {
+			fatalError()
+		}
+		guard let color = UIColor(hexString: hexCode) else {
+			fatalError()
+		}
+		navBar.barTintColor = color
+		navBar.tintColor = UIColor(contrastingBlackOrWhiteColorOn: color, isFlat: true)
+		navBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor : UIColor(contrastingBlackOrWhiteColorOn: color, isFlat: true)]
+		searchBar.barTintColor = color
+	}
 
 	//MARK: - TableView Datasource methods
 
@@ -36,6 +64,9 @@ class ToDoListViewController: SwipeTableViewController {
 		if let item = todoItems?[indexPath.row] {
 			print(item)
 			cell.setLabelText(from: item)
+			cell.backgroundColor = UIColor(hexString: item.cellColor!)?
+				.darken(byPercentage: CGFloat(indexPath.row)/CGFloat(todoItems!.count)/3.0)
+			cell.textLabel?.textColor = UIColor(contrastingBlackOrWhiteColorOn: cell.backgroundColor!, isFlat: true)
 			cell.accessoryType = item.done ? .checkmark : .none
 		} else {
 			print("nil")
@@ -110,6 +141,7 @@ class ToDoListViewController: SwipeTableViewController {
 				let item = Item()
 				item.title = toAdd
 				item.done = false
+				item.cellColor = category.cellColor
 				item.dateCreated = Date()
 				save(item: item, for: category)
 				let indexPath = IndexPath(row: (self.todoItems?.count ?? 1) - 1, section: 0)
@@ -145,9 +177,6 @@ class ToDoListViewController: SwipeTableViewController {
 		try! self.realm.write {
 			self.realm.delete(toDelete)
 		}
-		tableView.beginUpdates()
-		tableView.deleteRows(at: [indexPath], with: .automatic)
-		tableView.endUpdates()
 
 	}
 }

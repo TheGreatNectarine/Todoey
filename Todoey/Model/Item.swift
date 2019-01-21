@@ -13,6 +13,7 @@ class Item: Object {
 	@objc dynamic var title = ""
 	@objc dynamic var done = false
 	@objc dynamic var dateCreated: Date?
+	@objc dynamic var cellColor: String?
 	var parentCategory = LinkingObjects(fromType: Category.self, property: "items")
 
 	//FIXME: - Implement initializers

@@ -8,6 +8,7 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class CategoryViewController: SwipeTableViewController {
 	let realm = try! Realm()
@@ -15,13 +16,13 @@ class CategoryViewController: SwipeTableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-//		self.tableView.register(CategoryCell.self, forCellReuseIdentifier: "CategoryCell")
 		tableView.tableFooterView = UIView(frame: .zero)
 		tableView.rowHeight = 80.0
 		if let searchBar = tableView.subviews.first(where: {$0.isKind(of: UISearchBar.self)}) {
 			tableView.contentOffset = CGPoint(x: 0, y: searchBar.frame.size.height)
 		}
 		loadCategories()
+		tableView.separatorStyle = .none
     }
 
 	//MARK: - IBActions
@@ -41,9 +42,7 @@ class CategoryViewController: SwipeTableViewController {
 			textField = alertTextField
 		}
 		alert.addAction(action)
-		present(alert, animated: true) {
-			print(textField.text!)
-		}
+		present(alert, animated: true)
 	}
 
 	func addNewItemActionHandler(for textField: UITextField) {
@@ -52,6 +51,7 @@ class CategoryViewController: SwipeTableViewController {
 			//FIXME: add Category class with init
 			let category = Category()
 			category.name = categoryRaw
+			category.cellColor = UIColor.randomFlat.hexValue()
 			save(category: category)
 			let indexPath = IndexPath(row: (self.categories?.count ?? 1) - 1, section: 0)
 			self.tableView.beginUpdates()
@@ -66,9 +66,10 @@ class CategoryViewController: SwipeTableViewController {
 		let cell = super.tableView(tableView, cellForRowAt: indexPath)
 		if let category = categories?[indexPath.row] {
 			cell.setLabelText(from: category)
-		} else {
-			cell.textLabel?.text = "No Categories Added"
+			cell.backgroundColor = UIColor(hexString: category.cellColor!)
+			cell.textLabel?.textColor = UIColor(contrastingBlackOrWhiteColorOn: cell.backgroundColor!, isFlat: true)
 		}
+		cell.prepareForReuse()
 		return cell
 	}
 
@@ -119,9 +120,9 @@ class CategoryViewController: SwipeTableViewController {
 		try! self.realm.write {
 			self.realm.delete(toDelete)
 		}
-		tableView.beginUpdates()
-		tableView.deleteRows(at: [indexPath], with: .automatic)
-		tableView.endUpdates()
+//		tableView.beginUpdates()
+//		tableView.deleteRows(at: [indexPath], with: .automatic)
+//		tableView.endUpdates()
 	}
 }
 
