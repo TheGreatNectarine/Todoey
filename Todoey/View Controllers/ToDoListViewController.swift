@@ -25,6 +25,8 @@ class ToDoListViewController: SwipeTableViewController {
 		super.viewDidLoad()
 		tableView.tableFooterView = UIView(frame: .zero)
 		tableView.rowHeight = 80.0
+		tableView.separatorStyle = .none
+
 	}
 
 	override func viewWillAppear(_ animated: Bool) {

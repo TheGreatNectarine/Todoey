@@ -14,7 +14,7 @@
             <objects>
                 <tableViewController id="dYA-pL-3Yz" customClass="CategoryViewController" customModule="Todoey" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="Wg4-L0-rxV">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="551"/>
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="603"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <searchBar key="tableHeaderView" contentMode="redraw" searchBarStyle="prominent" placeholder="Search your Todoey Lists" translucent="NO" id="N4Y-hT-0BX">
@@ -41,7 +41,7 @@
                             <outlet property="delegate" destination="dYA-pL-3Yz" id="M6R-FX-eY9"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="Todoey" id="ykr-rj-J6Q">
+                    <navigationItem key="navigationItem" title="Todoey" largeTitleDisplayMode="never" id="ykr-rj-J6Q">
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="ZLd-cw-ivg">
                             <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <connections>
@@ -62,7 +62,7 @@
             <objects>
                 <tableViewController id="Vrw-DH-BGB" customClass="ToDoListViewController" customModule="Todoey" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="Jlc-66-zLE">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="551"/>
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="603"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <searchBar key="tableHeaderView" contentMode="redraw" searchBarStyle="prominent" placeholder="Search your Todoeys" id="PgL-wd-f9z">
@@ -89,7 +89,7 @@
                             <outlet property="delegate" destination="Vrw-DH-BGB" id="QGV-5X-lTq"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="[ITEMNAME]" id="bKa-NJ-dt3" colorLabel="IBBuiltInLabel-Gray">
+                    <navigationItem key="navigationItem" title="[ITEMNAME]" largeTitleDisplayMode="never" id="bKa-NJ-dt3" colorLabel="IBBuiltInLabel-Gray">
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="Yg5-TL-4sP">
                             <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <connections>
@@ -123,6 +123,9 @@
                         </textAttributes>
                     </navigationBar>
                     <nil name="viewControllers"/>
+                    <toolbar key="toolbar" opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="gLp-3i-KSy">
+                        <autoresizingMask key="autoresizingMask"/>
+                    </toolbar>
                     <connections>
                         <segue destination="dYA-pL-3Yz" kind="relationship" relationship="rootViewController" id="uL0-OO-ixi"/>
                     </connections>
